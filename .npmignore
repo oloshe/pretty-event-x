@@ -1,0 +1,7 @@
+/.vscode
+/coverage
+/src
+/test
+vitest.config.js
+vite.config.ts
+CHANGELOG
