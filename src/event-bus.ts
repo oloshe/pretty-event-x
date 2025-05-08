@@ -1,30 +1,24 @@
-type EventKey = string | symbol;
-type EventFunction<T = any> = (...payload: T[]) => void;
-type EventMap = Record<EventKey, EventFunction>;
-type ListenType = 'DEFAULT' | 'UNIQUE' | 'STACK';
-type ListenerType<E> = {
+export type Key = string;
+export type KeyOf<T> = keyof T;
+export type Callback<T = any> = (...payload: T[]) => void;
+export type CallbackMap = Record<Key, Callback>;
+export type CallbackType = 'DEFAULT' | 'UNIQUE' | 'STACK';
+export type IListener<E> = {
     alias: string;
-    func: E[keyof E];
-    type: ListenType;
+    func: E[KeyOf<E>];
+    type: CallbackType;
 };
-type Bus<E> = Record<keyof E, ListenerType<E>[]>;
-type CancelFunc = () => void;
-
+export type Bus<E> = Record<KeyOf<E>, IListener<E>[]>;
+export type CancelFunc = () => void;
 export type GetEventBusKey<T> = T extends EventBus<infer P> ? keyof P : unknown;
 
-interface IEventBus<T extends EventMap> {
-    on<Key extends keyof T>(key: Key, handler: T[Key], name?: string, type?: ListenType): EventHandler;
-    on_unique<Key extends keyof T>(key: Key, handler: T[Key], name?: string): EventHandler;
-    on_stack<Key extends keyof T>(key: Key, handler: T[Key], name?: string): EventHandler;
-    once<Key extends keyof T>(key: Key, handler: T[Key]): EventHandler;
-    off<Key extends keyof T>(key: Key, handler: T[Key]): void;
-    emit<Key extends keyof T>(key: Key, ...payload: Parameters<T[Key]>): void;
-    readonly bus: Partial<Bus<T>>;
-    readonly timestamp: number;
+export interface EventController {
+    cancel: CancelFunc;
 }
 
-export interface EventHandler {
-    cancel: CancelFunc;
+export interface EventGroup {
+    push: (...item: EventController[]) => number;
+    destroy: () => void;
 }
 
 export interface EventBusOptions {
@@ -49,11 +43,11 @@ interface ILogData {
     key: string;
 }
 
-interface DefaultEventMap {
+export interface DefaultEventMap {
     [key: string | symbol]: (data: any) => void;
 }
 
-export class EventBus<T extends EventMap = DefaultEventMap> implements IEventBus<T> {
+export class EventBus<T extends CallbackMap = DefaultEventMap> {
     private _bus: Partial<Bus<T>> = {};
     private readonly showLog: boolean;
     private readonly logFormat: (data: LogData, ...payload: any[]) => void;
@@ -73,8 +67,8 @@ export class EventBus<T extends EventMap = DefaultEventMap> implements IEventBus
         return this._bus;
     }
 
-    on<Key extends keyof T>(key: Key, handler: T[Key], name?: string, type: ListenType = 'DEFAULT'): EventHandler {
-        this.showLog && this.logFormat({ action: 'on', key: String(key), type: type });
+    on<Key extends KeyOf<T>>(key: Key, handler: T[Key], name?: string, type: CallbackType = 'DEFAULT'): EventController {
+        this.showLog && this.logFormat({ action: 'on', key: key as string, type: type });
         
         if (!this._bus[key]) this._bus[key] = [];
         
@@ -97,15 +91,15 @@ export class EventBus<T extends EventMap = DefaultEventMap> implements IEventBus
         };
     }
 
-    on_unique<Key extends keyof T>(key: Key, handler: T[Key], name?: string): EventHandler {
+    on_unique<Key extends KeyOf<T>>(key: Key, handler: T[Key], name?: string): EventController {
         return this.on(key, handler, name, 'UNIQUE');
     }
 
-    on_stack<Key extends keyof T>(key: Key, handler: T[Key], name?: string): EventHandler {
+    on_stack<Key extends KeyOf<T>>(key: Key, handler: T[Key], name?: string): EventController {
         return this.on(key, handler, name, 'STACK');
     }
 
-    once<Key extends keyof T>(key: Key, handler: T[Key]): EventHandler {
+    once<Key extends KeyOf<T>>(key: Key, handler: T[Key]): EventController {
         const handleOnce = (...payload: Parameters<typeof handler>) => {
             handler(...payload);
             listener.cancel();
@@ -115,7 +109,7 @@ export class EventBus<T extends EventMap = DefaultEventMap> implements IEventBus
         return listener;
     }
 
-    off<Key extends keyof T>(key: Key, handler: T[Key]): void {
+    off<Key extends KeyOf<T>>(key: Key, handler: T[Key]): void {
         const listeners = this._bus[key];
         if (!listeners) return;
         
@@ -126,13 +120,13 @@ export class EventBus<T extends EventMap = DefaultEventMap> implements IEventBus
         }
     }
 
-    async emit<Key extends keyof T>(key: Key, ...payload: Parameters<T[Key]>): Promise<void> {
+    async emit<Key extends KeyOf<T>>(key: Key, ...payload: Parameters<T[Key]>): Promise<void> {
         this.showLog && this.logFormat({ action: 'emit', key: String(key) }, ...payload);
         
         const listeners = this._bus[key];
         if (!listeners) return;
         
-        let stackFn: T[keyof T] | undefined;
+        let stackFn: T[KeyOf<T>] | undefined;
         
         for (let i = 0; i < listeners.length; i++) {
             const { func, type } = listeners[i];
@@ -162,7 +156,7 @@ export class EventBus<T extends EventMap = DefaultEventMap> implements IEventBus
         }
     }
 
-    private run<Key extends keyof T>(func: T[keyof T], ...payload: Parameters<T[Key]>): Promise<void> {
+    private run<Key extends KeyOf<T>>(func: T[KeyOf<T>], ...payload: Parameters<T[Key]>): Promise<void> {
         return new Promise((resolve) => {
             if (this.sync) {
                 resolve(func(...payload));
@@ -174,8 +168,8 @@ export class EventBus<T extends EventMap = DefaultEventMap> implements IEventBus
         });
     }
 
-    static createGroup(...initItems: EventHandler[]): EventGroup {
-        const list: EventHandler[] = initItems || [];
+    static createGroup(...initItems: EventController[]): EventGroup {
+        const list: EventController[] = initItems || [];
         return {
             push: (...item) => list.push(...item),
             destroy: () => {
@@ -183,10 +177,4 @@ export class EventBus<T extends EventMap = DefaultEventMap> implements IEventBus
             }
         };
     }
-}
-
-// 辅助函数保持独立
-export interface EventGroup {
-    push: (...item: EventHandler[]) => number;
-    destroy: () => void;
 }

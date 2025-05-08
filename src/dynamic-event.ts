@@ -1,9 +1,8 @@
 import { BaseEvent } from "./base-event";
-import { EventBusOptions, EventHandler } from "./event-bus";
+import { EventBusOptions, Callback, EventController, KeyOf, Key } from "./event-bus";
 
-export class DynamicEvent<K = string, T = any> extends BaseEvent {
+export class DynamicEvent<K extends Key, T> extends BaseEvent<Record<K, (data: T) => void>> {
     private _label: string;
-    private shuffix: string;
 
     constructor(options: {
         label: string,
@@ -11,31 +10,26 @@ export class DynamicEvent<K = string, T = any> extends BaseEvent {
     }) {
         super(options?.options);
         this._label = options.label;
-        this.shuffix = this.randomString(5);
     }
 
-    on(key: K, callback: (data: T) => void): EventHandler {
-        return this.bus.on(this.getKey(key), callback);
+    on(key: K, callback: Callback<T>): EventController {
+        return this.bus.on(key, callback);
     }
 
-    once(key: K, callback: (data: T) => void): EventHandler {
-        return this.bus.once(this.getKey(key), callback);
+    once(key: K, callback: Callback<T>): EventController {
+        return this.bus.once(key, callback);
     }
 
-    unique(key: K, callback: (data: T) => void): EventHandler {
-        return this.bus.on_unique(this.getKey(key), callback);
+    unique(key: K, callback: Callback<T>): EventController {
+        return this.bus.on_unique(key, callback);
     }
 
-    stack(key: K, callback: (data: T) => void): EventHandler {
-        return this.bus.on_stack(this.getKey(key), callback);
+    stack(key: K, callback: Callback<T>): EventController {
+        return this.bus.on_stack(key, callback);
     }
 
     emit(key: K, data: T) {
-        this.bus.emit(this.getKey(key), data);
-    }
-
-    private getKey(key: K): string {
-        return (key as string) + '-' + this.shuffix;
+        this.bus.emit(key, ...[data] as Parameters<Record<K, (data: T) => void>[K]>);
     }
 
     get label(): string {
@@ -43,6 +37,6 @@ export class DynamicEvent<K = string, T = any> extends BaseEvent {
     }
 
     toString(): string {
-        return `DynamicEvent(Label = ${this._label} Shuffix = ${this.shuffix})`;
+        return `DynamicEvent("${this._label}")`;
     }
 }

@@ -1,7 +1,7 @@
 import { BaseEvent } from "./base-event";
-import { EventBusOptions, EventHandler } from "./event-bus";
+import { EventBusOptions, EventController } from "./event-bus";
 
-export class StaticEvent<T> extends BaseEvent {
+export class StaticEvent<T> extends BaseEvent<Record<string, (data: T) => void>> {
     private _label: string;
     key: string;
 
@@ -10,23 +10,23 @@ export class StaticEvent<T> extends BaseEvent {
         options?: EventBusOptions;
     } = {}) {
         super(options?.options);
-        this.key = `${key}-${this.randomString(5)}`;
+        this.key = `${key}`;
         this._label = options?.label || key;
     }
 
-    on(callback: (data: T) => void): EventHandler {
+    on(callback: (data: T) => void): EventController {
         return this.bus.on(this.key, callback);
     }
 
-    once(callback: (data: T) => void): EventHandler {
+    once(callback: (data: T) => void): EventController {
         return this.bus.once(this.key, callback);
     }
 
-    unique(callback: (data: T) => void): EventHandler {
+    unique(callback: (data: T) => void): EventController {
         return this.bus.on_unique(this.key, callback);
     }
 
-    stack(callback: (data: T) => void): EventHandler {
+    stack(callback: (data: T) => void): EventController {
         return this.bus.on_stack(this.key, callback);
     }
 
@@ -39,6 +39,6 @@ export class StaticEvent<T> extends BaseEvent {
     }
 
     toString(): string {
-        return `StaticEvent(Label = ${this._label} Key = ${this.key} )`;
+        return `StaticEvent("${this._label}")[${this.key}]`;
     }
 }

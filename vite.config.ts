@@ -7,7 +7,7 @@ export default defineConfig({
   build: {
     lib: {
       entry: resolve(__dirname, 'src/index.ts'),
-      name: 'PrettyHttpClient',
+      name: 'PrettyEventX',
       // the proper extensions will be added
       fileName: 'index',
     },

@@ -1,16 +1,16 @@
 import { describe, expect, test } from "vitest";
-import { StaticEvent } from "../src/static-event";
-import { DynamicEvent } from "../src/dynamic-event";
-import { EventBus } from "../src/event-bus";
+import { StaticEvent, DynamicEvent, EventBus } from "../src";
 
 describe('event-bus', () => {
     test('base', async () => {
-        const bus = new EventBus({ log: true });
+        const bus = new EventBus<{
+            test: () => void;
+        }>({ log: true });
         let succ = false;
-        bus.on('test', (data) => {
+        bus.on('test', () => {
             succ = true;
         });
-        await bus.emit('test', 1);
+        await bus.emit('test');
         expect(succ).toBe(true);
         expect(bus.bus["test"]?.length).toBe(1);
     });
