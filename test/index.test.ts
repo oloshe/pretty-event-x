@@ -7,18 +7,29 @@ describe('event-bus', () => {
             test: () => void;
         }>({ log: true });
         let succ = false;
-        bus.on('test', () => {
-            succ = true;
-        });
+        const handler = bus.on('test', () => {
+            succ = !succ;
+        }, "test1");
         await bus.emit('test');
         expect(succ).toBe(true);
         expect(bus.bus["test"]?.length).toBe(1);
+        expect(handler.alias).toBe('test1');
+        expect(handler.type).toBe('DEFAULT');
+        expect(handler.cancel).toBeInstanceOf(Function);
+        handler.cancel();
+        expect(bus.bus["test"]?.length).toBe(0);
+        await bus.emit('test');
+        expect(succ).toBe(true);
     });
 
     test('name', async () => {
         const bus = new EventBus<{
             add: (data: number) => void;
-        }>({ log: true });
+        }>({ log: true, logger: {
+            log: (data) => {
+                console.log(data);
+            }
+        } });
         let counter = 0;
         bus.on('add', (data) => {
             counter += data * 2;

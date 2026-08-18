@@ -23,15 +23,15 @@ export class StaticEvent<T> extends BaseEvent<Record<string, (data: T) => void>>
     }
 
     unique(callback: (data: T) => void): EventController {
-        return this.bus.on_unique(this.key, callback);
+        return this.bus.onUnique(this.key, callback);
     }
 
     stack(callback: (data: T) => void): EventController {
-        return this.bus.on_stack(this.key, callback);
+        return this.bus.onStack(this.key, callback);
     }
 
     emit(data: T) {
-        this.bus.emit(this.key, data);
+        return this.bus.emit(this.key, data);
     }
 
     get label(): string {

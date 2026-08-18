@@ -1,35 +1,63 @@
 {
   "name": "pretty-event-x",
   "version": "2.0.0",
-  "description": "",
+  "description": "轻量、类型安全的事件总线、静态事件与动态事件封装",
   "type": "module",
   "main": "./dist/index.umd.cjs",
   "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
+      "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
-      "require": "./dist/index.umd.cjs"
+      "require": "./dist/index.umd.cjs",
+      "default": "./dist/index.js"
+    },
+    "./vite": {
+      "types": "./dist/vite.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.umd.cjs",
+      "default": "./dist/index.js"
     }
   },
+  "typesVersions": {
+    "*": {
+      "vite": [
+        "dist/vite.d.ts"
+      ],
+      "*": [
+        "dist/index.d.ts"
+      ]
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "CHANGELOG.md"
+  ],
+  "sideEffects": false,
   "scripts": {
     "build": "vite build",
-    "test": "vitest",
-    "coverage": "vitest run --coverage"
+    "typecheck": "tsc -p tsconfig.typecheck.json --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "coverage": "vitest run --coverage",
+    "prepack": "pnpm build"
   },
   "keywords": [
     "typescript",
-    "eventbus"
+    "eventbus",
+    "events"
   ],
   "author": "jacob.jiang",
   "license": "ISC",
   "devDependencies": {
     "@types/node": "^22.15.3",
     "@vitest/coverage-v8": "3.1.2",
+    "terser": "^5.50.0",
     "typescript": "^5.5.4",
-    "vite-plugin-dts": "^4.5.3"
-  },
-  "dependencies": {
     "vite": "^6.3.3",
+    "vite-plugin-dts": "^4.5.3",
     "vitest": "^3.1.2"
   }
 }

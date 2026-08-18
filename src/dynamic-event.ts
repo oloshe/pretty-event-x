@@ -21,15 +21,15 @@ export class DynamicEvent<K extends Key, T> extends BaseEvent<Record<K, (data: T
     }
 
     unique(key: K, callback: Callback<T>): EventController {
-        return this.bus.on_unique(key, callback);
+        return this.bus.onUnique(key, callback);
     }
 
     stack(key: K, callback: Callback<T>): EventController {
-        return this.bus.on_stack(key, callback);
+        return this.bus.onStack(key, callback);
     }
 
     emit(key: K, data: T) {
-        this.bus.emit(key, ...[data] as Parameters<Record<K, (data: T) => void>[K]>);
+        return this.bus.emit(key, ...[data] as Parameters<Record<K, (data: T) => void>[K]>);
     }
 
     get label(): string {
