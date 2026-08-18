@@ -50,6 +50,9 @@
     "events"
   ],
   "author": "jacob.jiang",
+  "repository": {
+    "url": "https://github.com/oloshe/pretty-event-x"
+  },
   "license": "ISC",
   "devDependencies": {
     "@types/node": "^22.15.3",
